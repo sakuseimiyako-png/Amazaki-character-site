@@ -1,0 +1,272 @@
+{
+  "version": 1,
+  "site": {
+    "title": "物語之終幕",
+    "subtitle": "天崎 恒 / 偽崎 / 山田太郎",
+    "slideIntervalMs": 5000
+  },
+  "profile": {
+    "name": "天崎 恒",
+    "alias": "偽崎（山田 太郎）",
+    "origin": "異能力 × 戦争の世界",
+    "age": "不明（トータル1000歳）",
+    "height": "191cm",
+    "gender": "男",
+    "likes": "子供、本、仲間、オルゴール、戦闘",
+    "description": [
+      "元いた世界から旅立った「天崎恒」の抜け殻に意思が宿った存在。元の本人とは厳密には別世界の存在である。",
+      "戦死者の怨念や戦友の無念が満ちて誕生。「天崎恒を殺すこと」を存在意義としているが、本人は復讐を望んでいない。",
+      "身体の約9割が異能道具に置換され、瘴気に蝕まれている。古い記憶は得意だが、新しいことを覚えるのが苦手。"
+    ]
+  },
+  "quotes": [
+    "正義だとか悪だとか、微塵も興味ない。",
+    "大切な物を守る為に、俺は〝終幕〟になる。",
+    "くだらねぇ物の為に、くだらねぇ事が出来るのが人間だ。"
+  ],
+  "world": {
+    "title": "異能力と戦争、そして都",
+    "body": "出身は異能力と戦争の世界。都へ侵入した彼は山田太郎を名乗り、新たな物語と対峙する。詳細な世界観原文は未提供のため、ここは編集可能な仮紹介です。"
+  },
+  "abilities": [
+    {
+      "id": "ab0",
+      "name": "終幕創造（ストーリーメーカー）",
+      "normal": "想像・空想・幻想の中に存在する物を具現化する。生命生成は不可能。特殊能力を持つ道具には瘴気が宿る。",
+      "awakened": "覚醒時には生成済みの異能道具を腕や脚に直接装着・展開できる。",
+      "image": "background-ability.jpg"
+    },
+    {
+      "id": "ab1",
+      "name": "再生の解放（リジェクト）",
+      "normal": "異能道具の制約を解除し力を極限まで引き出す。一試合一回が基本で、重大な代償を伴う。",
+      "awakened": "一度死を克服した覚醒状態では、記載設定上、代償を克服して連続的な解放を可能とする。",
+      "image": "background-ability.jpg"
+    },
+    {
+      "id": "ab2",
+      "name": "空骸機構",
+      "normal": "身体の約9割が異能道具であり、全身の空白を収納・展開機構として使用する。容量や損傷などに制約がある。",
+      "awakened": "身体各部での収納・放出と錬金術的操作を応用する。",
+      "image": "background-ability.jpg"
+    },
+    {
+      "id": "ab3",
+      "name": "還成（かんせい）",
+      "normal": "収納した物体・魔法・現象を根源要素に分解し、質量保存の範囲で再利用・錬成する。",
+      "awakened": "戦闘中の解析と錬成への応用が強化される。",
+      "image": "background-ability.jpg"
+    },
+    {
+      "id": "ab4",
+      "name": "瘴気（しょうき）",
+      "normal": "禁忌の代償として肉体を蝕む煤のような力。本人は一定の制御が可能。",
+      "awakened": "危険な力を制御し、身体強化や魔術の動力にも転用する。",
+      "image": "background-ability.jpg"
+    }
+  ],
+  "equipment": [
+    {
+      "id": "eqn0",
+      "name": "業弓型神殺兵装・射殺ス赫星",
+      "form": "normal",
+      "body": "詳細は元の会話にあるキャラクター原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqn1",
+      "name": "噴射式飛行装置・白熾星核",
+      "form": "normal",
+      "body": "詳細は元の会話にあるキャラクター原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqn2",
+      "name": "曲刃型軍刀・邪星白塗",
+      "form": "normal",
+      "body": "詳細は元の会話にあるキャラクター原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqn3",
+      "name": "多銃身回転機関銃・星喰機構ZE:G10N",
+      "form": "normal",
+      "body": "詳細は元の会話にあるキャラクター原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqn4",
+      "name": "回転式拳銃型異常兵装・搦糸蒼星",
+      "form": "normal",
+      "body": "詳細は元の会話にあるキャラクター原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqn5",
+      "name": "変形型義腕・狡神冥王腕",
+      "form": "normal",
+      "body": "詳細は元の会話にあるキャラクター原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqn6",
+      "name": "楔型装飾品・阿速羅天彗",
+      "form": "normal",
+      "body": "詳細は元の会話にあるキャラクター原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqn7",
+      "name": "瓶型小道具・星蝕安全瓶",
+      "form": "normal",
+      "body": "詳細は元の会話にあるキャラクター原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqn8",
+      "name": "武装転写型手袋・星還RE:CON",
+      "form": "normal",
+      "body": "詳細は元の会話にあるキャラクター原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqn9",
+      "name": "██████",
+      "form": "normal",
+      "body": "詳細は元の会話にあるキャラクター原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa0",
+      "name": "古印・霊骸神鎧",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa1",
+      "name": "赫星晶核弓・トラペゾ",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa2",
+      "name": "門界翔核・ヨグ＝ヴェント",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa3",
+      "name": "曲刃型軍刀・偃月邪星",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa4",
+      "name": "外星雷葬機構・星喰RE:YITH",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa5",
+      "name": "星鏡絡繰異銃・搦糸冥鏡",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa6",
+      "name": "星冥変形型神腕・狡神ノ腕",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa7",
+      "name": "楔型装飾品・阿速羅天彗",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa8",
+      "name": "外星封生式禁忌瓶・星蝕脳筒",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa9",
+      "name": "外星共鳴転写手套・星還RE:SONANCE",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    },
+    {
+      "id": "eqa10",
+      "name": "██████",
+      "form": "awakened",
+      "body": "詳細は元の会話にある覚醒後の原文を参照。本文全文は未転記。管理画面から追記してください。",
+      "image": "background-equipment.jpg"
+    }
+  ],
+  "techniques": [
+    {
+      "id": "te0",
+      "name": "星砕-這混崩拳-",
+      "body": "詳細本文は元の会話を参照。管理画面から編集してください。",
+      "image": "background-ability.jpg"
+    },
+    {
+      "id": "te1",
+      "name": "星砕-盲目神墜-",
+      "body": "詳細本文は元の会話を参照。管理画面から編集してください。",
+      "image": "background-ability.jpg"
+    },
+    {
+      "id": "te2",
+      "name": "星砕・双貌神断",
+      "body": "詳細本文は元の会話を参照。管理画面から編集してください。",
+      "image": "background-ability.jpg"
+    },
+    {
+      "id": "te3",
+      "name": "淵禍-厭うべき赫炎の鍵剣-",
+      "body": "詳細本文は元の会話を参照。管理画面から編集してください。",
+      "image": "background-ability.jpg"
+    },
+    {
+      "id": "te4",
+      "name": "屍典-心臓掌握-",
+      "body": "詳細本文は元の会話を参照。管理画面から編集してください。",
+      "image": "background-ability.jpg"
+    }
+  ],
+  "relations": [],
+  "history": [
+    {
+      "id": "h1",
+      "title": "CHAPTER.06 — 都への侵入",
+      "body": "モブキャラクターのデータを乗っ取り、山田太郎として都へ侵入。"
+    },
+    {
+      "id": "h2",
+      "title": "VOX・TEC・ENTERPRISE",
+      "body": "時折サボりつつも働き、次期リーダーの座を狙う。"
+    },
+    {
+      "id": "h3",
+      "title": "ゾ・シア",
+      "body": "地下生活者への異能道具の貸与を通じて生誕をアシストした。"
+    },
+    {
+      "id": "h4",
+      "title": "戦闘と共闘",
+      "body": "アルケイデスらと戦闘・共闘を重ね、新たな異能道具を生み出した。"
+    }
+  ]
+}
