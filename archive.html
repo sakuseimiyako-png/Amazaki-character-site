@@ -8,6 +8,10 @@
 <title>全文アーカイブ | AMAZAKI ARCHIVE</title>
 <link rel="stylesheet" href="styles.css">
 <link rel="stylesheet" href="archive-page.css"><link rel="stylesheet" href="awakening.css"><link rel="stylesheet" href="entry-reveal.css">
+<!-- Only full archive pages: hide obsolete direct links when modern menu groups are present. -->
+<style>
+.full-archive-page #menuItems:has(> .menu-group) > .menu-link { display:none!important; }
+</style>
 </head>
 <body class="full-archive-page">
 <header class="topbar"><a class="brand archive-home" href="index.html#main" aria-label="メインへ戻る">✦ <span>物語之終幕</span></a><span class="header-mid">AMAZAKI / ARCHIVE</span><button id="menuToggle" class="hamburger" aria-label="メニューを開く" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button></header>
@@ -33,6 +37,6 @@
 <script src="safe-html.js" defer></script>
 <script src="awakening-state.js" defer></script>
 <script src="entry-reveal.js" defer></script>
-<script src="archive-page.js" defer></script>
-<script src="archive-menu-unify.js" defer></script>
+<script src="archive-page.js?v=1.6.5-menu-clean" defer></script>
+<script src="archive-menu-unify.js?v=1.6.5-menu-clean" defer></script>
 </body></html>

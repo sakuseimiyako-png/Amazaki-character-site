@@ -87,6 +87,21 @@
   });
   host.replaceChildren(fragment);
 
+  // v1.6.5 defensive guard: v1.6.4 already stopped creating legacy links,
+  // but an old cached archive-page.js can still append them after async load.
+  // Keep ONLY the five current .menu-group elements. Do not touch submenus.
+  const cleanObsoleteLinks = () => {
+    for (const node of Array.from(host.children)) {
+      if (!node.classList.contains('menu-group')) node.remove();
+    }
+  };
+  cleanObsoleteLinks();
+  if (typeof MutationObserver !== 'undefined') {
+    const guard = new MutationObserver(cleanObsoleteLinks);
+    guard.observe(host, { childList: true });
+  }
+
+
   // Fix the existing dedicated-page Escape handler's incomplete ARIA/icon reset.
   document.addEventListener('keydown', event => {
     if (event.key !== 'Escape' || !nav.classList.contains('open')) return;
