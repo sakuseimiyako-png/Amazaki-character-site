@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#070a11">
+<meta name="description" content="物語之終幕 — 異能道具・能力・使用技・世界観・関係・都での歴史の全文アーカイブ">
+<title>全文アーカイブ | AMAZAKI ARCHIVE</title>
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="archive-page.css">
+</head>
+<body class="full-archive-page">
+<header class="topbar"><a class="brand archive-home" href="index.html#main" aria-label="メインへ戻る">✦ <span>物語之終幕</span></a><span class="header-mid">AMAZAKI / ARCHIVE</span><button id="menuToggle" class="hamburger" aria-label="メニューを開く" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button></header>
+<nav id="menu" class="menu" aria-label="メインメニュー" aria-hidden="true"><div class="menu-inner"><div class="menu-sign">✦<small>THE END OF THE STORY</small></div><div id="menuItems"></div></div></nav>
+<main id="archiveMain" class="full-archive-main">
+<div class="archive-hero">
+<p class="eyebrow" id="archiveCode">THE END OF THE STORY / COMPLETE RECORD</p>
+<h1 id="archiveTitle">ARCHIVE</h1>
+<p class="archive-description">メインページは抜粋版。このページでは、公開済みの記録を省略せずに閲覧できます。</p>
+<div class="archive-breadcrumb"><a id="backOverview" href="index.html#world">‹ 抜粋版に戻る</a><span id="archiveCount" aria-live="polite"></span></div>
+</div>
+<section class="archive-inner" aria-label="全文一覧">
+<div class="archive-controls"><label class="archive-search-label" for="fullSearch">キーワード検索 <input type="search" id="fullSearch" placeholder="名前や本文で絞り込む"></label>
+<div class="archive-form-control" id="formWrap"><span>形態</span><div class="archive-form-buttons" role="group" aria-label="形態を選択"><button type="button" data-form="normal" class="selected">通常形態</button><button type="button" data-form="awakened">覚醒形態</button></div></div>
+</div>
+<p id="archiveStatus" class="archive-status" role="status" aria-live="polite">アーカイブを読み込んでいます…</p>
+<div id="fullRecords" class="full-records"></div>
+<div class="archive-end"><span>✦ END OF RECORDS</span><a href="index.html#main">メイン画面へ戻る ↑</a></div>
+</section>
+</main>
+<footer><span>✦ THE END OF THE STORY</span><span>AMAZAKI / ARCHIVE</span><a href="admin.html" class="admin-footer-link">管理者ログイン</a></footer>
+<script src="supabase-config.js" defer></script>
+<script src="safe-html.js" defer></script>
+<script src="archive-page.js" defer></script>
+</body></html>
