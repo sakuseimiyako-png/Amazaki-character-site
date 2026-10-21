@@ -65,11 +65,25 @@ function choose(x){
  $('#imageNote').textContent=editImagePath?'既存画像: '+editImagePath:'画像未設定（分類の共通背景を表示）';drawList();
 }
 
+// 新規記事は同じ分類・形態の末尾へ配置。既存記事の数字は変更しない。
+function nextSortOrder(category,form){
+ const max=items.reduce((value,entry)=>{
+  if(entry.category!==category||entry.form!==form||String(entry.title||'').startsWith('__AMASAKI_'))return value;
+  const order=Number(entry.sort_order);
+  return Number.isFinite(order)?Math.max(value,order):value;
+ },0);
+ // 現行の整数バリデーションの上限を超えないよう調整する。
+ if(max>=100000)return null;
+ return max+Math.min(10,100000-max);
+}
+
 function newRecord(){
  selected=null;
  const category=$('#categoryFilter').value;
  const form=SINGLE_FORM.has(category)?'normal':$('#formFilter').value;
- const row={id:null,category,form,title:'',published:false,sort_order:items.length+1,body:{type:'html',html:'<p></p>'},image_path:null};
+ const order=nextSortOrder(category,form);
+ if(order===null){message('この分類の並び順は上限100000です。既存の記事を整理してから追加してください。',true);return;}
+ const row={id:null,category,form,title:'',published:false,sort_order:order,body:{type:'html',html:'<p></p>'},image_path:null};
  choose(row);$('#editHeading').textContent='新規記事';$('#entryBadge').textContent='まだ保存していません';
 }
 
