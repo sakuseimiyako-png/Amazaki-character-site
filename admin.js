@@ -1,5 +1,5 @@
 (()=>{'use strict';
-const $=s=>document.querySelector(s),safe=window.AmasakiSafeHTML;let cfg=null,session=null,items=[],sections=[],selected=null,imageObj=null,editImagePath=null,removedImage=false,loading=false,previewVisible=false;
+const $=s=>document.querySelector(s),safe=window.AmasakiSafeHTML;let cfg=null,session=null,items=[],sections=[],siteSettings=[],selected=null,imageObj=null,editImagePath=null,removedImage=false,loading=false,previewVisible=false;
 const CATEGORIES={item:'異能道具',ability:'能力',technique:'使用技',world:'世界観',relation:'関係',history:'都での歴史'};
 const SINGLE_FORM=new Set(['world','relation','history']);
 const sectionKey=(category,form)=>category+':'+(SINGLE_FORM.has(category)?'normal':form);
@@ -37,13 +37,14 @@ async function signIn(evt){evt.preventDefault();loginError('');working(true);try
  const a=await r.json();session={...a,expires_at:Date.now()+(a.expires_in||3600)*1000};store();
  if(!await verifyAdmin()){session=null;store();loginError('管理者権限がありません。');return}
  showWorkspace();await loadEntries();}catch(e){loginError(e.message)}finally{working(false)}}
-async function signOut(){try{if(session)await request('/auth/v1/logout',{method:'POST'})}catch{}session=null;store();items=[];selected=null;showLogin();message('ログアウトしました')}
+async function signOut(){try{if(session)await request('/auth/v1/logout',{method:'POST'})}catch{}session=null;store();items=[];siteSettings=[];selected=null;showLogin();setAwakeningControls(false);message('ログアウトしました')}
 async function loadEntries(){
  clearSortDrag(false);
  const result=await request('/rest/v1/site_entries?select=*&order=sort_order.asc,created_at.asc&limit=1000');
  items=Array.isArray(result)?result:[];
  const state=await request('/rest/v1/site_section_state?select=section_key,active');
  sections=Array.isArray(state)?state:[];
+ await loadSiteSettings();
  drawList();
  if(selected?.id){const found=items.find(x=>x.id===selected.id);found?choose(found):newRecord()}
  else {const article=activeList()[0];article?choose(article):newRecord()}
@@ -262,7 +263,38 @@ async function saveEntry(){
 }
 
 function download(text,name){const blob=new Blob([text],{type:'application/json;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000)}
-function snapshot(){return JSON.stringify({kind:'amasaki-site-entries',version:2,exported_at:new Date().toISOString(),articles:items,sections},null,2)}
+function setAwakeningControls(enabled){
+ ['awakenedPublic','awakenedEffect','saveAwakeningSettings'].forEach(id=>{$('#'+id).disabled=!enabled});
+}
+async function loadSiteSettings(){
+ try{
+  const rows=await request('/rest/v1/site_settings?select=setting_key,enabled,updated_at');
+  if(!Array.isArray(rows))fail('覚醒設定の取得形式が不正です');
+  const keys=['awakened_public','awakened_effect'];
+  if(keys.some(k=>!rows.some(x=>x.setting_key===k&&typeof x.enabled==='boolean')))fail('覚醒設定が未作成です。SQL_FIRST_RUN_v1_6.sqlを先に実行してください。');
+  siteSettings=rows.filter(x=>keys.includes(x.setting_key));
+  $('#awakenedPublic').value=String(siteSettings.find(x=>x.setting_key==='awakened_public').enabled);
+  $('#awakenedEffect').value=String(siteSettings.find(x=>x.setting_key==='awakened_effect').enabled);
+  $('#awakeningSettingsStatus').textContent='設定を読み込みました。変更後は「覚醒設定を保存」を押してください。';
+  setAwakeningControls(true);
+ }catch(error){siteSettings=[];setAwakeningControls(false);$('#awakeningSettingsStatus').textContent='読み込み失敗：'+error.message;message('覚醒設定：'+error.message,true)}
+}
+async function saveAwakeningSettings(){
+ if(loading||siteSettings.length!==2)return;
+ const visible=$('#awakenedPublic').value==='true',effect=$('#awakenedEffect').value==='true';
+ if(!visible&&!confirm('覚醒形態を非公開にします。公開サイトの切替と覚醒記事を隠しますか？'))return;
+ // Download an independent settings+article snapshot *before* changing access.
+ download(snapshot(),'amazaki-before-awakening-setting-'+Date.now()+'.json');
+ working(true);setAwakeningControls(false);
+ try{
+  const rows=[{setting_key:'awakened_public',enabled:visible},{setting_key:'awakened_effect',enabled:effect}];
+  const result=await request('/rest/v1/site_settings?on_conflict=setting_key',{method:'POST',body:rows,prefer:'resolution=merge-duplicates,return=representation'});
+  if(!Array.isArray(result)||result.length!==2)fail('保存結果が不正です');
+  siteSettings=result;$('#awakeningSettingsStatus').textContent='保存しました。閲覧者の次回読み込みから反映します。';message('覚醒の公開／演出設定を保存しました。');
+ }catch(error){message('覚醒設定の保存に失敗：'+error.message,true);$('#awakeningSettingsStatus').textContent='保存に失敗しました。バックアップは保持してください。';await loadSiteSettings()}
+ finally{working(false);if(siteSettings.length===2)setAwakeningControls(true)}
+}
+function snapshot(){return JSON.stringify({kind:'amasaki-site-entries',version:3,exported_at:new Date().toISOString(),articles:items,sections,settings:siteSettings.map(x=>({setting_key:x.setting_key,enabled:x.enabled}))},null,2)}
 
 async function deleteEntry(){
  if(!selected?.id)return;
@@ -303,7 +335,7 @@ async function importSeed(){
 
 async function restore(){
  let j;try{j=JSON.parse($('#restoreJson').value)}catch{message('JSON形式が不正です',true);return}
- if(j?.kind!=='amasaki-site-entries'||![1,2].includes(j.version)||!Array.isArray(j.articles)||j.articles.length>1000){message('管理システム専用のJSONを貼り付けてください',true);return}
+ if(j?.kind!=='amasaki-site-entries'||![1,2,3].includes(j.version)||!Array.isArray(j.articles)||j.articles.length>1000){message('管理システム専用のJSONを貼り付けてください',true);return}
  try{
   const rows=j.articles.map(o=>{
    const r={id:o.id,category:o.category,form:o.form,title:o.title,body:o.body,image_path:o.image_path,sort_order:o.sort_order,published:o.published,updated_at:new Date().toISOString()};
@@ -312,10 +344,12 @@ async function restore(){
    if(r.image_path!==null&&!/^images\/[A-Za-z0-9._-]+\.(webp|png|jpe?g)$/.test(r.image_path))fail('画像参照先が不正です');return r;
   });
   const backupSections=(Array.isArray(j.sections)?j.sections:[]).filter(x=>/^(item|ability|technique):(normal|awakened)$|^(world|relation|history):normal$/.test(x.section_key)&&typeof x.active==='boolean');
+  const backupSettings=(j.version===3&&Array.isArray(j.settings)?j.settings:[]).filter(x=>['awakened_public','awakened_effect'].includes(x.setting_key)&&typeof x.enabled==='boolean');
   if(!confirm(`${rows.length}件を上書き・追加します。現在DBをJSON保存してから実行します。実行しますか？`))return;
   download(snapshot(),'amasaki-before-restore-'+Date.now()+'.json');working(true);
   if(rows.length)await request('/rest/v1/site_entries?on_conflict=id',{method:'POST',body:rows,prefer:'resolution=merge-duplicates,return=minimal'});
   if(backupSections.length)await request('/rest/v1/site_section_state?on_conflict=section_key',{method:'POST',body:backupSections.map(x=>({section_key:x.section_key,active:x.active})),prefer:'resolution=merge-duplicates,return=minimal'});
+  if(backupSettings.length)await request('/rest/v1/site_settings?on_conflict=setting_key',{method:'POST',body:backupSettings,prefer:'resolution=merge-duplicates,return=minimal'});
   selected=null;await loadEntries();message('復元しました。JSONにない記事の削除と画像実体の復元は行いません。');
  }catch(e){message('復元失敗: '+e.message,true)}finally{working(false)}
 }
@@ -363,7 +397,7 @@ function attach(){
  $('#seedBtn').onclick=importSeed;
  $('#downloadJson').onclick=()=>download(snapshot(),'amasaki-articles-'+new Date().toISOString().slice(0,10)+'.json');
  $('#copyJson').onclick=async()=>{try{await navigator.clipboard.writeText(snapshot());message('記事JSONをコピーしました')}catch{message('コピー不可。JSONファイルを保存してください',true)}};
- $('#restoreBtn').onclick=restore;
+ $('#restoreBtn').onclick=restore;$('#saveAwakeningSettings').onclick=saveAwakeningSettings;
  $('#previewBtn').onclick=showPreview;$('#closePreview').onclick=closePreview;
  window.addEventListener('message',e=>{if(previewVisible&&e.origin===location.origin&&e.source===$('#previewFrame').contentWindow&&e.data?.type==='AMASAKI_PREVIEW_READY_V14')sendPreview()});
  $('#previewDesktop').onclick=()=>{$('#previewFrame').classList.remove('mobile');$('#previewDesktop').setAttribute('aria-pressed','true');$('#previewMobile').setAttribute('aria-pressed','false')};

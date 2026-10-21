@@ -20,3 +20,8 @@
 .entry-list .entry-sort-row.is-dragging{outline:2px dashed #bdd8fb;background:#263b52;opacity:.8}
 .entry-list.sort-dragging,.entry-list.sort-dragging *{cursor:grabbing}
 @media(max-width:850px){.entry-list .entry-sort-row>.entry-drag-handle{min-width:50px;font-size:27px}}
+
+/* v1.6 awakening settings */
+#awakeningSettingsPanel{border-color:#75485b;background:linear-gradient(120deg,#1d1323,#121b2a 65%)}
+#awakeningSettingsPanel h2{color:#edb3c6}
+#awakeningSettingsStatus{border-left:2px solid #b77c9d;padding-left:12px;min-height:20px}

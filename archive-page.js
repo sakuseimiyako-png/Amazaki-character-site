@@ -3,7 +3,7 @@ const $=s=>document.querySelector(s);
 const LABELS={world:['WORLD ARCHIVE','世界観','world'],item:['EQUIPMENT ARCHIVE','異能道具','arsenal'],ability:['ABILITY ARCHIVE','能力','arsenal'],technique:['TECHNIQUE ARCHIVE','使用技','arsenal'],relation:['RELATION ARCHIVE','関係','archive'],history:['CHRONICLE ARCHIVE','都での歴史','archive']};
 const ALIASES={equipment:'item',abilities:'ability',techniques:'technique',relations:'relation'};
 const args=new URLSearchParams(location.search),input=args.get('section')||'world',section=LABELS[input]?input:(ALIASES[input]||'world');
-let form=args.get('form')==='awakened'?'awakened':'normal';const hasForm=['item','ability','technique'].includes(section);
+const requestedForm=args.get('form')==='awakened'?'awakened':'normal';let form='normal',awakeningAllowed=false;const hasForm=['item','ability','technique'].includes(section);
 const safe=window.AmasakiSafeHTML;
 const asset=s=>'assets/'+encodeURIComponent(s||'');
 const sectionKey=s=>s+':normal';
@@ -21,7 +21,7 @@ function currentRows(){
  if(!managed)return legacyRows();
  return cloudRows.filter(x=>x.category===section&&x.form===(hasForm?form:'normal')).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0)).map(r=>({title:r.title,body:safe.richHtml(r.body),image:(r.image_path?cloudImage(r,section==='item'?'background-equipment.jpg':'background-history.png'):'')}));
 }
-function updateURL(){document.querySelectorAll('a[data-preserve-form]').forEach(a=>{a.href='archive.html?section='+a.dataset.preserveForm+'&form='+form});if(location.protocol==='about:')return;const u=new URL(location.href);u.searchParams.set('section',section);if(hasForm)u.searchParams.set('form',form);else u.searchParams.delete('form');history.replaceState(null,'',u.pathname+u.search+u.hash)}
+function updateURL(){if(!awakeningAllowed)form='normal';document.querySelectorAll('a[data-preserve-form]').forEach(a=>{a.href='archive.html?section='+a.dataset.preserveForm+'&form='+form});if(location.protocol==='about:')return;const u=new URL(location.href);u.searchParams.set('section',section);if(hasForm)u.searchParams.set('form',form);else u.searchParams.delete('form');history.replaceState(null,'',u.pathname+u.search+u.hash)}
 function render(){
  const rows=currentRows().filter(r=>(r.title+' '+r.body.replace(/<[^>]+>/g,' ')).toLocaleLowerCase().includes(query.toLocaleLowerCase()));
  const box=$('#fullRecords');box.replaceChildren();$('#archiveCount').textContent=rows.length+' RECORDS';
@@ -48,10 +48,13 @@ async function load(){
  ]);if(!a.ok||!b.ok)throw Error('データベース取得失敗');const entries=await a.json(),states=await b.json();if(!Array.isArray(entries)||!Array.isArray(states))throw Error('DB形式不正');cloudRows=entries.filter(r=>r.title!=='__AMASAKI_DB_READY__');remoteSections=new Set(states.map(s=>s.section_key));cloudOK=true;$('#archiveStatus').textContent='公開済みの記録を表示中';render();}
  catch(e){console.warn(e);$('#archiveStatus').textContent='最新記事の取得に失敗しました。初期記録のみ表示中です。時間をおいて再読み込みしてください。'}
 }
-function start(){
+async function start(){
+ const visibility=await window.AmazakiAwakeningState.read();awakeningAllowed=visibility.ok&&visibility.public;form=awakeningAllowed?requestedForm:'normal';
+ document.querySelectorAll('[data-form="awakened"]').forEach(b=>{b.hidden=!awakeningAllowed;b.disabled=!awakeningAllowed});
+ if(hasForm&&requestedForm==='awakened'&&!awakeningAllowed)updateURL();
  const [en,jp,anchor]=LABELS[section];$('#archiveTitle').textContent=en;$('#archiveCode').textContent=jp+' / COMPLETE RECORD';$('#backOverview').href='index.html#'+anchor;document.title=jp+'（全文） | AMAZAKI ARCHIVE';
  $('#formWrap').hidden=!hasForm;
- document.querySelectorAll('[data-form]').forEach(b=>{b.classList.toggle('selected',b.dataset.form===form);b.onclick=()=>{form=b.dataset.form;document.querySelectorAll('[data-form]').forEach(x=>x.classList.toggle('selected',x.dataset.form===form));updateURL();render()}});
+ document.querySelectorAll('[data-form]').forEach(b=>{b.classList.toggle('selected',b.dataset.form===form);b.onclick=()=>{if(b.dataset.form==='awakened'&&!awakeningAllowed)return;form=b.dataset.form;document.querySelectorAll('[data-form]').forEach(x=>x.classList.toggle('selected',x.dataset.form===form));updateURL();render()}});
  $('#fullSearch').addEventListener('input',e=>{query=e.target.value.trim();render()});menu();load()
 }
 start();
