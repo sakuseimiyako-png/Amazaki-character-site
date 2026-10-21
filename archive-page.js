@@ -19,19 +19,19 @@ function legacyRows(){if(!localData)return[];
 function currentRows(){
  const managed=cloudOK&&(remoteSections.has(section+':'+(hasForm?form:'normal'))||cloudRows.some(x=>x.category===section&&x.form===(hasForm?form:'normal')));
  if(!managed)return legacyRows();
- return cloudRows.filter(x=>x.category===section&&x.form===(hasForm?form:'normal')).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0)).map(r=>({title:r.title,body:safe.richHtml(r.body),image:(r.image_path?cloudImage(r,section==='item'?'background-equipment.jpg':'background-history.png'):'')}));
+ return cloudRows.filter(x=>x.category===section&&x.form===(hasForm?form:'normal')).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0)).map(r=>({title:r.title,body:safe.richHtml(r.body),image:(r.image_path?cloudImage(r,section==='item'?'background-equipment.jpg':'background-history.png'):''),motion:r.body?.animation}));
 }
 function updateURL(){if(!awakeningAllowed)form='normal';document.querySelectorAll('a[data-preserve-form]').forEach(a=>{a.href='archive.html?section='+a.dataset.preserveForm+'&form='+form});if(location.protocol==='about:')return;const u=new URL(location.href);u.searchParams.set('section',section);if(hasForm)u.searchParams.set('form',form);else u.searchParams.delete('form');history.replaceState(null,'',u.pathname+u.search+u.hash)}
 function render(){
  const rows=currentRows().filter(r=>(r.title+' '+r.body.replace(/<[^>]+>/g,' ')).toLocaleLowerCase().includes(query.toLocaleLowerCase()));
- const box=$('#fullRecords');box.replaceChildren();$('#archiveCount').textContent=rows.length+' RECORDS';
+ const box=$('#fullRecords');window.AmazakiEntryReveal?.forget(box);box.replaceChildren();$('#archiveCount').textContent=rows.length+' RECORDS';
  if(!rows.length){const n=document.createElement('p');n.className='archive-status';n.textContent=query?'検索条件に一致する記事はありません。':'公開されている記録はありません。';box.append(n);return}
  rows.forEach((r,i)=>{
   const card=document.createElement('article');card.className='full-record';card.id='record-'+(i+1);
   if(r.image){const media=document.createElement('div');media.className='full-record-media';media.dataset.ratio=hasForm?'item':'wide';media.style.backgroundImage='url("'+r.image+'")';media.setAttribute('role','img');media.setAttribute('aria-label',r.title+'の画像');card.append(media)}
   const body=document.createElement('div');body.className='full-record-body';
   const number=document.createElement('small');number.className='full-record-index';number.textContent='ARCHIVE #'+String(i+1).padStart(2,'0');
-  const h=document.createElement('h2');h.textContent=r.title;const rich=document.createElement('div');rich.className='entry-rich';rich.innerHTML=r.body;body.append(number,h,rich);card.append(body);box.append(card)
+  const h=document.createElement('h2');h.textContent=r.title;const rich=document.createElement('div');rich.className='entry-rich';rich.innerHTML=r.body;body.append(number,h,rich);card.append(body);box.append(card);window.AmazakiEntryReveal?.watch(rich,r.motion)
  });
 }
 function menu(){const host=$('#menuItems');const groups=[['MAIN / メイン','index.html#main'],['CHARACTER PROFILE / キャラクター説明','index.html#character'],['WORLD / 世界観','archive.html?section=world'],['異能道具','archive.html?section=item'],['能力','archive.html?section=ability'],['使用技','archive.html?section=technique'],['関係','archive.html?section=relation'],['都での歴史','archive.html?section=history']];

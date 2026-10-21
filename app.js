@@ -80,7 +80,7 @@ function cloudImage(row,defaultAsset){
  if(cfg&&/^images\/[A-Za-z0-9._-]+\.(?:webp|png|jpe?g)$/.test(name))return cfg.url+'/storage/v1/object/public/entry-images/'+name;
  return asset(defaultAsset);
 }
-function bodyElement(row){const div=document.createElement('div');div.className='entry-rich';div.innerHTML=safe.richHtml(row.body);if(['右から登場','下から浮上'].includes(row.body?.animation))div.setAttribute('aria-label',row.body.animation);return div}
+function bodyElement(row){const div=document.createElement('div');div.className='entry-rich';div.innerHTML=safe.richHtml(row.body);window.AmazakiEntryReveal?.watch(div,row.body?.animation);return div}
 // v1.5: overview-only home. The dedicated pages always read the same underlying data.
 const DIGEST_LIMIT=3;
 const DIGEST_CHARS=160;
@@ -101,20 +101,20 @@ function detailDialog(){
  const content=document.createElement('div');content.className='entry-dialog-inner';dialog.append(close,content);
  dialog.addEventListener('click',event=>{if(event.target===dialog)dialog.close()});document.body.append(dialog);return dialog;
 }
-function expandEntry(title,html,image,cat){
- const d=detailDialog(),box=d.querySelector('.entry-dialog-inner');box.replaceChildren();
+function expandEntry(title,html,image,cat,motion){
+ const d=detailDialog(),box=d.querySelector('.entry-dialog-inner');window.AmazakiEntryReveal?.forget(box);box.replaceChildren();
  if(image){const img=document.createElement('img');img.src=image;img.alt='';img.className='entry-dialog-image';box.append(img)}
  const eyebrow=document.createElement('span');eyebrow.className='entry-dialog-eyebrow';eyebrow.textContent='AMAZAKI / '+SECTION_LABEL[cat];
  const h=document.createElement('h2');h.textContent=title;
  const rich=document.createElement('div');rich.className='entry-rich';rich.innerHTML=html;
- box.append(eyebrow,h,rich);d.showModal();d.querySelector('.entry-modal-close').focus();
+ box.append(eyebrow,h,rich);d.showModal();window.AmazakiEntryReveal?.play(rich,motion);d.querySelector('.entry-modal-close').focus();
 }
-function digestBody(parent,title,html,image,cat){
- const desc=excerpt(html);const p=document.createElement('p');p.className='entry-digest';p.textContent=desc.short;parent.append(p);
- if(desc.long){const b=document.createElement('button');b.type='button';b.className='entry-read-more';b.textContent='>> もっと見る';b.setAttribute('aria-label',title+'の全文をもっと見る');b.onclick=()=>expandEntry(title,html,image,cat);parent.append(b)}
+function digestBody(parent,title,html,image,cat,motion){
+ const desc=excerpt(html);const p=document.createElement('p');p.className='entry-digest';p.textContent=desc.short;parent.append(p);window.AmazakiEntryReveal?.watch(p,motion);
+ if(desc.long){const b=document.createElement('button');b.type='button';b.className='entry-read-more';b.textContent='>> もっと見る';b.setAttribute('aria-label',title+'の全文をもっと見る');b.onclick=()=>expandEntry(title,html,image,cat,motion);parent.append(b)}
 }
 function renderWorld(){
- const title=$('#worldTitle'),body=$('#worldBody'),shell=$('.world-content');shell.querySelectorAll('.world-entry-extra,.world-cover,.world-digest-row').forEach(e=>e.remove());
+ const title=$('#worldTitle'),body=$('#worldBody'),shell=$('.world-content');window.AmazakiEntryReveal?.forget(shell);shell.querySelectorAll('.world-entry-extra,.world-cover,.world-digest-row').forEach(e=>e.remove());
  const foot=shell.querySelector('.footnote');
  if(!isRemote('world','normal')){
   foot.hidden=false;const t=data.world?.title||'世界観',v=data.world?.body||'';const desc=excerpt(safe.plainHtml(v));
@@ -130,12 +130,12 @@ function renderWorld(){
   const wrap=document.createElement('article');wrap.className='world-entry-extra world-digest-row';
   const image=r.image_path||r.previewImageData?cloudImage(r,'background-history.png'):'';
   if(image){const cover=document.createElement('div');cover.className='world-cover';cover.style.backgroundImage='url("'+image+'")';wrap.append(cover)}
-  const h=document.createElement('h3');h.textContent=r.title;wrap.append(h);digestBody(wrap,r.title,safe.richHtml(r.body),image,'world');shell.append(wrap)
+  const h=document.createElement('h3');h.textContent=r.title;wrap.append(h);digestBody(wrap,r.title,safe.richHtml(r.body),image,'world',r.body?.animation);shell.append(wrap)
  });
 }
 function itemsFor(){if(tab==='equipment')return data.equipment.filter(x=>!x.form||x.form===form);return data[tab]||[]}
 function renderArsenal(){
- const category=CLOUD_CATEGORY[tab],list=$('#arsenalCards');list.replaceChildren();
+ const category=CLOUD_CATEGORY[tab],list=$('#arsenalCards');window.AmazakiEntryReveal?.forget(list);list.replaceChildren();
  const q=$('#search').value.trim().toLocaleLowerCase();
  let records=[];
  if(!isRemote(category,form)){
@@ -143,7 +143,7 @@ function renderArsenal(){
    .map(x=>({title:x.name,html:safe.plainHtml(tab==='abilities'?(x[form]||x.normal):x.body),image:asset(x.image||'background-equipment.jpg')}));
  }else{
   records=publicRows(category,form).filter(r=>(r.title+' '+(r.body?.html||'')).toLocaleLowerCase().includes(q))
-   .map(r=>({title:r.title,html:safe.richHtml(r.body),image:cloudImage(r,category==='item'?'background-equipment.jpg':'background-ability.jpg')}));
+   .map(r=>({title:r.title,html:safe.richHtml(r.body),image:cloudImage(r,category==='item'?'background-equipment.jpg':'background-ability.jpg'),motion:r.body?.animation}));
  }
  overviewMore('arsenal',category,records.length);
  if(!records.length){const msg=document.createElement('p');msg.textContent=q?'該当する項目はありません。':'公開記事はありません。';list.append(msg);return}
@@ -151,24 +151,24 @@ function renderArsenal(){
   const card=document.createElement('article');card.className='entry-card';
   const cover=document.createElement('div');cover.className='entry-image';cover.style.backgroundImage='url("'+r.image+'")';
   const details=document.createElement('div');details.className='entry-text';const no=document.createElement('small');no.textContent='ARCHIVE #'+String(i+1).padStart(2,'0');
-  const heading=document.createElement('h3');heading.textContent=r.title;details.append(no,heading);digestBody(details,r.title,r.html,r.image,category);
+  const heading=document.createElement('h3');heading.textContent=r.title;details.append(no,heading);digestBody(details,r.title,r.html,r.image,category,r.motion);
   card.append(cover,details);list.append(card)
  });
 }
 function renderArchive(){
- const category=archive==='relations'?'relation':'history',list=$('#archiveContent');list.replaceChildren();
+ const category=archive==='relations'?'relation':'history',list=$('#archiveContent');window.AmazakiEntryReveal?.forget(list);list.replaceChildren();
  let records=[];
  if(!isRemote(category,'normal')){
   records=(data[archive]||[]).map(x=>({title:x.title||x.name,html:safe.plainHtml(x.body||''),image:x.image?asset(x.image):''}));
  }else{
-  records=publicRows(category,'normal').map(r=>({title:r.title,html:safe.richHtml(r.body),image:r.image_path||r.previewImageData?cloudImage(r,'background-relations.jpg'):''}));
+  records=publicRows(category,'normal').map(r=>({title:r.title,html:safe.richHtml(r.body),image:r.image_path||r.previewImageData?cloudImage(r,'background-relations.jpg'):'',motion:r.body?.animation}));
  }
  overviewMore('archive',category,records.length);
  if(!records.length){list.textContent='公開記事はありません。';return}
  records.slice(0,DIGEST_LIMIT).forEach(r=>{
   const article=document.createElement('article');article.className='history-item archive-rich-card';
   if(r.image){const media=document.createElement('div');media.className='archive-card-media';media.style.backgroundImage='url("'+r.image+'")';article.append(media)}
-  const h=document.createElement('h3');h.textContent=r.title;article.append(h);digestBody(article,r.title,r.html,r.image,category);list.append(article)
+  const h=document.createElement('h3');h.textContent=r.title;article.append(h);digestBody(article,r.title,r.html,r.image,category,r.motion);list.append(article)
  });
 }
 function renderAll(){renderMenu();renderSlides();renderProfile();renderWorld();renderArsenal();renderArchive();refreshEditor()}

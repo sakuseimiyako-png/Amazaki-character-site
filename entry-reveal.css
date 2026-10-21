@@ -1,0 +1,28 @@
+/* AMAZAKI ARCHIVE v1.6.2 — works for PC & mobile. No hidden/pending styles. */
+.entry-reveal-run[data-entry-motion="right"]{
+ animation:amazaki-entry-right .85s cubic-bezier(.2,.72,.22,1) both;
+}
+.entry-reveal-run[data-entry-motion="rise"]{
+ animation:amazaki-entry-rise .85s cubic-bezier(.2,.72,.22,1) both;
+}
+@keyframes amazaki-entry-right{
+ from{opacity:0;transform:translate3d(42px,0,0);filter:blur(3px)}
+ to{opacity:1;transform:translate3d(0,0,0);filter:blur(0)}
+}
+@keyframes amazaki-entry-rise{
+ from{opacity:0;transform:translate3d(0,32px,0);filter:blur(3px)}
+ to{opacity:1;transform:translate3d(0,0,0);filter:blur(0)}
+}
+@media(max-width:650px){
+ @keyframes amazaki-entry-right{
+  from{opacity:0;transform:translate3d(22px,0,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+ }
+ @keyframes amazaki-entry-rise{
+  from{opacity:0;transform:translate3d(0,20px,0)}
+  to{opacity:1;transform:translate3d(0,0,0)}
+ }
+}
+@media(prefers-reduced-motion:reduce){
+ .entry-reveal-run[data-entry-motion]{animation:none!important;opacity:1!important;transform:none!important;filter:none!important}
+}
