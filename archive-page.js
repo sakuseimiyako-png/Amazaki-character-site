@@ -11,6 +11,8 @@ let localData=null,cloudRows=[],remoteSections=new Set(),cloudOK=false,query='';
 function cloudConfig(){const c=window.AMASAKI_SUPABASE||{};try{const u=new URL(c.url);if(u.protocol!=='https:'||!u.hostname.endsWith('.supabase.co'))return null;if(!/^sb_publishable_[\w-]+$/.test(c.publishableKey||''))return null;return {url:u.origin,key:c.publishableKey}}catch{return null}}
 function cloudImage(row,def){if(row.previewImageData?.startsWith('data:image/webp;base64,'))return row.previewImageData;const c=cloudConfig(),name=row.image_path||'';return c&&/^images\/[\w.-]+\.(?:webp|png|jpe?g)$/.test(name)?c.url+'/storage/v1/object/public/entry-images/'+name:asset(def)}
 const htmlPlain=t=>safe.plainHtml(t||'');
+// Native lazy loading avoids decoding the entire archive's images up front.
+function coverImage(node,url){const img=document.createElement('img');img.alt='';img.loading='lazy';img.decoding='async';img.src=url;node.append(img)}
 function legacyRows(){if(!localData)return[];
  const list={item:'equipment',ability:'abilities',technique:'techniques',relation:'relations',history:'history'}[section];
  if(section==='world'){return[{title:localData.world?.title||'世界観',body:htmlPlain(localData.world?.body||''),image:''}]}
@@ -19,7 +21,7 @@ function legacyRows(){if(!localData)return[];
 function currentRows(){
  const managed=cloudOK&&(remoteSections.has(section+':'+(hasForm?form:'normal'))||cloudRows.some(x=>x.category===section&&x.form===(hasForm?form:'normal')));
  if(!managed)return legacyRows();
- return cloudRows.filter(x=>x.category===section&&x.form===(hasForm?form:'normal')).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0)).map(r=>({title:r.title,body:safe.richHtml(r.body),image:(r.image_path?cloudImage(r,section==='item'?'background-equipment.jpg':'background-history.png'):''),motion:r.body?.animation}));
+ return cloudRows.filter(x=>x.category===section&&x.form===(hasForm?form:'normal')).sort((a,b)=>(a.sort_order??0)-(b.sort_order??0)).map(r=>({title:r.title,body:safe.richHtml(r.body),image:(r.image_path?cloudImage(r,section==='item'?'background-equipment.jpg':'background-history.webp'):''),motion:r.body?.animation}));
 }
 function updateURL(){if(!awakeningAllowed)form='normal';document.querySelectorAll('a[data-preserve-form]').forEach(a=>{a.href='archive.html?section='+a.dataset.preserveForm+'&form='+form});if(location.protocol==='about:')return;const u=new URL(location.href);u.searchParams.set('section',section);if(hasForm)u.searchParams.set('form',form);else u.searchParams.delete('form');history.replaceState(null,'',u.pathname+u.search+u.hash)}
 function render(){
@@ -28,17 +30,30 @@ function render(){
  if(!rows.length){const n=document.createElement('p');n.className='archive-status';n.textContent=query?'検索条件に一致する記事はありません。':'公開されている記録はありません。';box.append(n);return}
  rows.forEach((r,i)=>{
   const card=document.createElement('article');card.className='full-record';card.id='record-'+(i+1);
-  if(r.image){const media=document.createElement('div');media.className='full-record-media';media.dataset.ratio=hasForm?'item':'wide';media.style.backgroundImage='url("'+r.image+'")';media.setAttribute('role','img');media.setAttribute('aria-label',r.title+'の画像');card.append(media)}
+  if(r.image){const media=document.createElement('div');media.className='full-record-media';media.dataset.ratio=hasForm?'item':'wide';coverImage(media,r.image);media.setAttribute('role','img');media.setAttribute('aria-label',r.title+'の画像');card.append(media)}
   const body=document.createElement('div');body.className='full-record-body';
   const number=document.createElement('small');number.className='full-record-index';number.textContent='ARCHIVE #'+String(i+1).padStart(2,'0');
   const h=document.createElement('h2');h.textContent=r.title;const rich=document.createElement('div');rich.className='entry-rich';rich.innerHTML=r.body;body.append(number,h,rich);card.append(body);box.append(card);window.AmazakiEntryReveal?.watch(rich,r.motion)
  });
 }
-function menu(){const host=$('#menuItems');const groups=[['MAIN / メイン','index.html#main'],['CHARACTER PROFILE / キャラクター説明','index.html#character'],['WORLD / 世界観','archive.html?section=world'],['異能道具','archive.html?section=item'],['能力','archive.html?section=ability'],['使用技','archive.html?section=technique'],['関係','archive.html?section=relation'],['都での歴史','archive.html?section=history']];
- groups.forEach(([label,href])=>{const link=document.createElement('a');link.className='menu-link';const target=href.includes('section=')?href.split('section=')[1].split('&')[0]:null;if(['item','ability','technique'].includes(target)){link.dataset.preserveForm=target;link.href=href+'&form='+form}else link.href=href;link.textContent=label;host.append(link)});
- const btn=$('#menuToggle'),nav=$('#menu');btn.onclick=()=>{const open=!nav.classList.contains('open');nav.classList.toggle('open',open);nav.setAttribute('aria-hidden',String(!open));btn.setAttribute('aria-expanded',String(open));btn.classList.toggle('active',open);document.body.classList.toggle('locked',open)};
- document.addEventListener('keydown',e=>{if(e.key==='Escape'){nav.classList.remove('open');btn.setAttribute('aria-expanded','false');document.body.classList.remove('locked')}})
+// v1.6.4: archive-menu-unify.js is the ONLY owner of menu link creation.
+// The earlier menu() used to append eight obsolete links after asynchronous
+// settings loading, creating a duplicate menu under the five modern groups.
+// Keep this function for open/close behaviour only; DO NOT add links here.
+function menu(){
+ const btn=$('#menuToggle'),nav=$('#menu');
+ if(!btn||!nav)return;
+ function toggle(open){
+  nav.classList.toggle('open',open);
+  nav.setAttribute('aria-hidden',String(!open));
+  btn.setAttribute('aria-expanded',String(open));
+  btn.classList.toggle('active',open);
+  document.body.classList.toggle('locked',open);
+ }
+ btn.onclick=()=>toggle(!nav.classList.contains('open'));
+ document.addEventListener('keydown',e=>{if(e.key==='Escape'&&nav.classList.contains('open')){toggle(false);btn.focus()}});
 }
+
 async function load(){
  try{const r=await fetch('data/content.json',{cache:'no-store'});if(!r.ok)throw Error('元データ取得不可');localData=await r.json()}catch(e){console.error(e)}
  render();const cfg=cloudConfig();if(!cfg){$('#archiveStatus').textContent='オフラインの初期記録を表示しています。';return}

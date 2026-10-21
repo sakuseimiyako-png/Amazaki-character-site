@@ -2,7 +2,7 @@
 .full-archive-page{background:linear-gradient(#060a12d4,#060a12f4),url('assets/background-site.jpg') center/cover fixed;color:#e6ebf4}
 .full-archive-page .archive-home{text-decoration:none}
 .full-archive-main{min-height:100vh;padding-top:var(--topbar-height,75px)}
-.archive-hero{background:linear-gradient(112deg,#071221df,#080d18e3),url('assets/background-history.png') center/cover;padding:clamp(86px,10vw,148px) 6vw 65px;border-bottom:1px solid #8aacc033}
+.archive-hero{background:linear-gradient(112deg,#071221df,#080d18e3),url('assets/background-history.webp') center/cover;padding:clamp(86px,10vw,148px) 6vw 65px;border-bottom:1px solid #8aacc033}
 .archive-hero h1{margin:17px 0 28px;font:normal clamp(47px,7vw,100px)/1.12 'Cormorant Garamond',serif;letter-spacing:.035em;background:linear-gradient(98deg,#fff,#9ebbe0 70%);color:transparent;background-clip:text;overflow-wrap:anywhere}
 .archive-description{font-size:14px;color:#b9c9dc;line-height:2;max-width:650px}
 .archive-breadcrumb{margin-top:38px;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;font-size:13px;color:#9aafc8}
@@ -36,3 +36,6 @@
 .archive-end a{font:14px 'Noto Sans JP',sans-serif;color:#d8eafc;text-decoration:none;border-bottom:1px solid #8db1da;padding:12px}
 @media(max-width:820px){.full-archive-main{padding-top:64px}.archive-hero{padding-top:75px}.full-record{grid-template-columns:1fr}.full-record-media[data-ratio="wide"]{aspect-ratio:16/9;min-height:0}.full-record-media[data-ratio="item"]{aspect-ratio:5/4;min-height:0}.full-record-body{padding:26px 6vw 42px}.full-record-body .entry-rich{font-size:15px}.full-records{gap:26px}.archive-hero h1{font-size:clamp(40px,11vw,70px)}}
 @media(prefers-reduced-motion:reduce){.full-record{animation:none!important}.archive-hero{background-attachment:scroll}}
+
+/* v1.6.3: fixed backdrops cause repaint jank on mobile scroll. */
+@media(max-width:820px),(hover:none){.full-archive-page{background-attachment:scroll}}

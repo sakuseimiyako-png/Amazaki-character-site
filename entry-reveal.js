@@ -8,8 +8,7 @@
   const type=TYPES[motion];if(!node||!type||reduce())return node;
   node.dataset.entryMotion=type;
   node.classList.remove('entry-reveal-run');
-  // Replay an opening dialog. In a normal document this is called only once per item.
-  void node.offsetWidth;
+  // Nodes are newly created for each view/dialog. Avoid a synchronous layout read.
   node.classList.add('entry-reveal-run');
   return node;
  }
