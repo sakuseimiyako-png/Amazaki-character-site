@@ -39,6 +39,7 @@ async function signIn(evt){evt.preventDefault();loginError('');working(true);try
  showWorkspace();await loadEntries();}catch(e){loginError(e.message)}finally{working(false)}}
 async function signOut(){try{if(session)await request('/auth/v1/logout',{method:'POST'})}catch{}session=null;store();items=[];selected=null;showLogin();message('ログアウトしました')}
 async function loadEntries(){
+ clearSortDrag(false);
  const result=await request('/rest/v1/site_entries?select=*&order=sort_order.asc,created_at.asc&limit=1000');
  items=Array.isArray(result)?result:[];
  const state=await request('/rest/v1/site_section_state?select=section_key,active');
@@ -51,7 +52,138 @@ async function loadEntries(){
 
 function activeList(){return items.filter(x=>!x.title.startsWith('__AMASAKI_')&&x.category===$('#categoryFilter').value&&x.form===(SINGLE_FORM.has(x.category)?'normal':$('#formFilter').value))}
 
-function drawList(){let box=$('#entryList');box.replaceChildren();activeList().forEach(x=>{let b=document.createElement('button');b.type='button';b.className=x.id===selected?.id?'active':'';b.textContent=x.title;let meta=document.createElement('span');meta.textContent=x.published?'● 公開':'○ 下書き';b.append(meta);b.addEventListener('click',()=>choose(x));box.append(b)});if(!box.children.length)box.textContent='この分類・形態の記事はまだありません。'}
+// v1.5.4 記事リスト: 編集はタイトルを押す / 並び替えは取っ手をドラッグする。
+function drawList(){
+ const box=$('#entryList');box.setAttribute('role','group');box.replaceChildren();
+ const list=activeList();
+ if(list.length>1){const help=document.createElement('p');help.className='sort-help';help.textContent='☷ をドラッグして並び替え（スマホでは長押し）。指を離すと保存されます。';box.append(help)}
+ list.forEach(x=>{
+  const row=document.createElement('div');row.className='entry-sort-row';row.dataset.id=x.id||'';
+  const b=document.createElement('button');b.type='button';b.className='entry-select'+(x.id===selected?.id?' active':'');
+  b.textContent=x.title;const meta=document.createElement('span');meta.textContent=x.published?'● 公開':'○ 下書き';b.append(meta);
+  b.addEventListener('click',()=>{if(!loading&&!sortDrag?.active)choose(x)});
+  const grip=document.createElement('button');grip.type='button';grip.className='entry-drag-handle';grip.textContent='⠿';
+  grip.title='ドラッグして並び順変更（スマホは長押し）';grip.setAttribute('aria-label',x.title+' の並び順を変更');
+  grip.disabled=!x.id||list.length<2||loading;
+  grip.addEventListener('keydown',e=>{
+   if((e.key==='ArrowUp'||e.key==='ArrowDown')&&!e.repeat){e.preventDefault();moveByKeyboard(x.id,e.key==='ArrowUp'?-1:1)}
+  });
+  row.append(b,grip);box.append(row)
+ });
+ if(!list.length)box.textContent='この分類・形態の記事はまだありません。';
+}
+
+let sortDrag=null;
+function clearSortDrag(refresh=true){
+ if(!sortDrag)return;
+ if(sortDrag.timer)clearTimeout(sortDrag.timer);
+ sortDrag=null;$('#entryList').classList.remove('sort-dragging');
+ if(refresh)drawList();
+}
+function startSortDrag(e){
+ const handle=e.target.closest('.entry-drag-handle');
+ if(!handle||loading||!session||e.pointerType==='mouse'&&e.button!==0)return;
+ const row=handle.closest('.entry-sort-row'),box=$('#entryList');
+ if(!row?.dataset.id||sortDrag)return;
+ const state={pointerId:e.pointerId,pointerType:e.pointerType,row,box,startX:e.clientX,startY:e.clientY,active:false,moved:false,timer:null};
+ sortDrag=state;
+ // Capture on the list (not on the row, which is moved in the DOM).
+ try{box.setPointerCapture(e.pointerId)}catch{}
+ if(e.pointerType==='touch'){
+  state.timer=setTimeout(()=>{
+   if(sortDrag!==state)return;
+   state.active=true;state.row.classList.add('is-dragging');box.classList.add('sort-dragging');
+   if(navigator.vibrate)navigator.vibrate(35);
+  },450);
+ }
+ // Click still works on the title; the handle itself only starts sorting.
+ e.preventDefault();
+}
+function pointerSortMove(e){
+ const d=sortDrag;if(!d||e.pointerId!==d.pointerId)return;
+ const dx=e.clientX-d.startX,dy=e.clientY-d.startY;
+ if(!d.active){
+  if(Math.hypot(dx,dy)<6)return;
+  if(d.pointerType==='touch'){clearSortDrag();return} // スマホ: 長押し前の移動は無視
+  d.active=true;d.row.classList.add('is-dragging');d.box.classList.add('sort-dragging');
+ }
+ const rect=d.box.getBoundingClientRect();
+ if(e.clientY<rect.top+32)d.box.scrollTop-=16;
+ if(e.clientY>rect.bottom-32)d.box.scrollTop+=16;
+ const all=[...d.box.querySelectorAll('.entry-sort-row')];
+ let target=all.find(row=>{const r=row.getBoundingClientRect();return e.clientY<r.top+r.height/2});
+ if(target===d.row){return}
+ // insertBefore supports both insertion at the beginning and at the end.
+ if(target)d.box.insertBefore(d.row,target);else d.box.append(d.row);
+ d.moved=true;
+}
+function endSortDrag(e,commit=true){
+ const d=sortDrag;if(!d||e.pointerId!==d.pointerId)return;
+ const ids=[...d.box.querySelectorAll('.entry-sort-row')].map(n=>n.dataset.id);
+ const moved=d.active&&d.moved;
+ clearSortDrag(!moved);
+ if(moved&&commit)void saveSortedIds(ids,d.row.dataset.id);
+ else if(moved)drawList();
+}
+function resolveSortUpdates(before,after,movedId){
+ const moved=before.find(x=>x.id===movedId),idx=after.findIndex(x=>x.id===movedId);
+ if(!moved||idx<0||after.length!==before.length)throw Error('並び替え対象が見つかりません');
+ const prior=before.map(x=>Number(x.sort_order));
+ const strict=prior.every((n,i)=>Number.isInteger(n)&&n>=0&&n<=100000&&(i===0||n>prior[i-1]));
+ const prev=idx?Number(after[idx-1].sort_order):null;
+ const next=idx<after.length-1?Number(after[idx+1].sort_order):null;
+ let candidate=null;
+ if(strict){
+  if(prev===null)candidate=Math.floor(next/2);
+  else if(next===null)candidate=prev+10;
+  else candidate=Math.floor((prev+next)/2);
+ }
+ if(candidate!==null&&Number.isInteger(candidate)&&candidate>=0&&candidate<=100000&&
+    (prev===null||candidate>prev)&&(next===null||candidate<next)){
+  return [{id:movedId,sort_order:candidate}];
+ }
+ // 同じ番号や空き不足の場合のみ分類・形態内を10刻みで再採番。
+ if(after.length>10000)throw Error('一度に並び替えられる件数を超えています');
+ return after.map((row,i)=>({id:row.id,sort_order:(i+1)*10})).filter(x=>Number(before.find(r=>r.id===x.id).sort_order)!==x.sort_order);
+}
+async function saveSortedIds(ids,movedId){
+ if(loading)return;
+ const before=activeList();const prevIds=before.map(x=>x.id);
+ if(ids.length!==prevIds.length||new Set(ids).size!==ids.length||ids.some(id=>!prevIds.includes(id))){drawList();message('記事一覧が変わりました。再読み込みしてから並べ替えてください。',true);return}
+ if(ids.every((id,i)=>id===prevIds[i])){drawList();return}
+ const after=ids.map(id=>before.find(x=>x.id===id));
+ const updates=resolveSortUpdates(before,after,movedId);
+ if(updates.length===0){drawList();return}
+ const oldOrders=new Map(updates.map(x=>[x.id,before.find(y=>y.id===x.id).sort_order]));
+ const saved=[];working(true);drawList();
+ try{
+  // 正常時は移動記事1件の更新だけ。数字の隙間がない場合は範囲を正規化。
+  for(const u of updates){
+   const result=await request('/rest/v1/site_entries?id=eq.'+encodeURIComponent(u.id),{
+    method:'PATCH',body:{sort_order:u.sort_order},prefer:'return=representation'});
+   if(!Array.isArray(result)||result.length!==1||Number(result[0].sort_order)!==u.sort_order)fail('記事の並び順を保存できませんでした');
+   saved.push(u.id);
+  }
+  for(const u of updates){const row=items.find(x=>x.id===u.id);if(row)row.sort_order=u.sort_order}
+  items.sort((a,b)=>(Number(a.sort_order)||0)-(Number(b.sort_order)||0)||String(a.created_at||'').localeCompare(String(b.created_at||'')));
+  if(selected?.id&&updates.some(u=>u.id===selected.id))$('#sortOrder').value=items.find(x=>x.id===selected.id).sort_order;
+  drawList();message('並び順を保存しました。公開ページにも反映されます。');
+ }catch(err){
+  // バッチ中に失敗した場合、更新成功分を元の値に戻すよう試みる。
+  let rollbackFailed=false;
+  for(const id of saved.reverse())try{await request('/rest/v1/site_entries?id=eq.'+encodeURIComponent(id),{
+   method:'PATCH',body:{sort_order:oldOrders.get(id)},prefer:'return=minimal'});
+  }catch{rollbackFailed=true}
+  drawList();message('並び替えを保存できませんでした: '+err.message+(rollbackFailed?'。復元も一部失敗したため、DB記事JSONを確認してください。':'。元の順番を維持しています。'),true);
+ }finally{working(false);drawList()}
+}
+function moveByKeyboard(id,direction){
+ if(loading)return;const list=activeList(),idx=list.findIndex(x=>x.id===id),to=idx+direction;
+ if(idx<0||to<0||to>=list.length)return;
+ const ids=list.map(x=>x.id);[ids[idx],ids[to]]=[ids[to],ids[idx]];
+ void saveSortedIds(ids,id);
+}
+
 function resetCanvas(){const c=$('#cropCanvas'),ctx=c.getContext('2d');ctx.fillStyle='#19283b';ctx.fillRect(0,0,c.width,c.height);ctx.fillStyle='#98aac0';ctx.font='28px sans-serif';ctx.textAlign='center';ctx.fillText('画像プレビュー '+$('#imageAspect').textContent,c.width/2,c.height/2)}
 
 function updateFormVisibility(){const single=SINGLE_FORM.has($('#categoryFilter').value);$('#formField').hidden=single;if(single)$('#formFilter').value='normal';const wide=single;const can=$('#cropCanvas');can.width=wide?1600:1250;can.height=900+(!wide?100:0);$('#imageAspect').textContent=wide?'16:9':'5:4';$('#imageTypeHelp').textContent=wide?'世界観・関係・歴史は16:9で保存します。':'異能道具・能力・技は5:4で保存します。';}
@@ -212,9 +344,15 @@ function closePreview(){previewVisible=false;$('#previewDialog').hidden=true;doc
 function attach(){
  cfg=config();if(!cfg){$('#configBanner').hidden=false;$('#loginForm').querySelector('button').disabled=true}
  $('#loginForm').addEventListener('submit',signIn);$('#logoutBtn').addEventListener('click',signOut);
- $('#categoryFilter').addEventListener('change',()=>{selected=null;updateFormVisibility();newRecord()});
- $('#formFilter').addEventListener('change',()=>{selected=null;newRecord()});
- $('#newBtn').onclick=newRecord;$('#entryList').addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.tagName==='BUTTON')e.target.click()});
+ $('#categoryFilter').addEventListener('change',()=>{clearSortDrag(false);selected=null;updateFormVisibility();newRecord()});
+ $('#formFilter').addEventListener('change',()=>{clearSortDrag(false);selected=null;newRecord()});
+ $('#newBtn').onclick=newRecord;
+ const listBox=$('#entryList');
+ listBox.addEventListener('pointerdown',startSortDrag);
+ listBox.addEventListener('pointermove',pointerSortMove);
+ listBox.addEventListener('pointerup',e=>endSortDrag(e));
+ listBox.addEventListener('pointercancel',e=>endSortDrag(e,false));
+ listBox.addEventListener('lostpointercapture',e=>endSortDrag(e,false));
  $('#saveEntry').onclick=saveEntry;$('#deleteEntry').onclick=deleteEntry;
  $('#imageInput').onchange=onImage;$('#cropX').oninput=drawCrop;$('#cropY').oninput=drawCrop;
  $('#removeImage').onclick=()=>{editImagePath=null;removedImage=true;imageObj=null;$('#imageInput').value='';resetCanvas();$('#imageNote').textContent='画像指定を解除。保存すると分類の共通背景が表示されます。'};

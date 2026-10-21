@@ -8,3 +8,15 @@
 .preview-notice{color:#afc7e5;font-size:12px;margin:0;text-align:center}.preview-dialog iframe{display:block;border:2px solid #47627e;background:#070a11;width:min(100%,1500px);flex:1;min-height:0;border-radius:8px;transition:width .2s}
 .preview-dialog iframe.mobile{width:min(390px,100%)}body.preview-open{overflow:hidden}
 @media(max-width:650px){.preview-dialog{padding:8px}.preview-toolbar strong{font-size:13px}.preview-toolbar button{padding:7px 10px}}
+
+
+/* v1.5.4: 記事一覧のPCドラッグ / スマホ長押し並べ替え */
+.entry-list .sort-help{font-size:11px;line-height:1.65;color:#b8cde5;margin:5px 2px 12px}
+.entry-sort-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;align-items:stretch;gap:6px;margin:7px 0;border-radius:5px;transition:background-color .12s}
+.entry-list .entry-sort-row>button{margin:0;min-height:50px}
+.entry-list .entry-sort-row>.entry-select{border-radius:5px;min-width:0;overflow-wrap:anywhere}
+.entry-list .entry-sort-row>.entry-drag-handle{display:flex;align-items:center;justify-content:center;padding:5px;font-size:24px;font-weight:600;color:#c9e1fd;border:1px solid #536b86;background:#152a42;text-align:center;user-select:none;-webkit-user-select:none;touch-action:none;cursor:grab;min-width:44px;min-height:50px}
+.entry-list .entry-sort-row>.entry-drag-handle:focus-visible{outline:2px solid #b9dcff;outline-offset:2px}
+.entry-list .entry-sort-row.is-dragging{outline:2px dashed #bdd8fb;background:#263b52;opacity:.8}
+.entry-list.sort-dragging,.entry-list.sort-dragging *{cursor:grabbing}
+@media(max-width:850px){.entry-list .entry-sort-row>.entry-drag-handle{min-width:50px;font-size:27px}}
